@@ -218,6 +218,13 @@ def VIDEOLINKS(url):
             print movie.track['src']
             print "++++ done"
 
+            # extracting the subtiles
+            if xbmc.Player().isPlaying():
+                xbmc.Player().stop()
+                xbmc.Player().disableSubtitles
+                xbmc.sleep(100)
+            subtitles.extract_subtitle(__base_url__ + movie.track['src'], "test.srt", __agent__)
+
             addLink('Da click pentru vizionare', movie.source['src'], __base_url__ + movie.track['src'], '', 'play_video', cookiestr, False)
         else:
             print "activation nedeed !!!"
@@ -249,15 +256,30 @@ def get_params():
     return param
 
 def addLink(name, url, subtitle, iconimage, action, cookies, watched):
-    ok = True
-    url = sys.argv[0] + "?url=" + urllib.quote_plus(url) + "&subtitle=" + subtitle + "&action=" + str(action) + "&cookies=" + cookies + "&name=" + urllib.quote_plus(name)
-    print "~~~~~~~~~~~~", url
-    liz = xbmcgui.ListItem(name, iconImage = "DefaultVideo.png", thumbnailImage=iconimage)
-    infolabels = {}
-    infolabels["Title"] = name
-    liz.setInfo(type="Video", infoLabels = infolabels)
-    ok = xbmcplugin.addDirectoryItem(handle = int(sys.argv[1]), url = url, listitem = liz)
-    return ok
+    if name == "Activare":
+        ok = True
+        url = sys.argv[0] + "?url=" + urllib.quote_plus(url) + "&subtitle=" + subtitle + "&action=" + str(action) + "&cookies=" + cookies + "&name=" + urllib.quote_plus(name)
+        print "~~~~~~~~~~~~", url
+        liz = xbmcgui.ListItem(name, iconImage = "DefaultVideo.png", thumbnailImage=iconimage)
+        infolabels = {}
+        infolabels["Title"] = name
+        liz.setInfo(type="Video", infoLabels = infolabels)
+        ok = xbmcplugin.addDirectoryItem(handle = int(sys.argv[1]), url = url, listitem = liz)
+        return ok
+    else:
+        ok = True
+        #url = sys.argv[0] + "?url=" + urllib.quote_plus(url) + "&subtitle=" + subtitle + "&action=" + str(action) + "&cookies=" + cookies + "&name=" + urllib.quote_plus(name)
+        
+        headers = "User-Agent=" + __agent__ + "&Cookie=" + cookies + "&Referer=http://serialepenet.ro/476-embed-236/player/player.swf"
+        url = url + "|" + headers;
+
+        print "~~~~~~~~~~~~", url
+        liz = xbmcgui.ListItem(name, iconImage = "DefaultVideo.png", thumbnailImage=iconimage)
+        infolabels = {}
+        infolabels["Title"] = name
+        liz.setInfo(type="Video", infoLabels = infolabels)
+        ok = xbmcplugin.addDirectoryItem(handle = int(sys.argv[1]), url = url, listitem = liz)
+        return ok
 
 def addDir(name, url, mode, iconimage):
     u = sys.argv[0] + "?url=" + urllib.quote_plus(url) + "&mode=" + str(mode) + "&name=" + urllib.quote_plus(name)
@@ -345,6 +367,12 @@ elif mode == 3:
 elif mode == 4:
     print "" + url
     VIDEOLINKS(url + "?html5")
+    while not xbmc.Player().isPlaying():
+        xbmc.sleep(100)
+    subt = os.path.join(xbmc.translatePath("special://temp"), 'serialepenet') + os.sep + "test.srt"
+    print "############ subtitle: ", subt
+    xbmc.Player().setSubtitles(subt)
+    xbmc.Player().showSubtitles(True)
 
 if action == 'play_video':
     url = url + '?start=0'

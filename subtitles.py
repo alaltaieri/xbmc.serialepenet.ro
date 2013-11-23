@@ -3,6 +3,7 @@
 import xbmc, os
 from datetime import datetime
 from bs4 import BeautifulSoup
+import requests
 
 from HTMLParser import HTMLParser
 
@@ -53,3 +54,28 @@ def ttml2srt(ttml, name):
     f.close()
 
     return tmp_file
+
+def extract_subtitle(url, filename, useragent):
+    headers = {'User-Agent': useragent}
+    print "--- getting subtitle file"
+    r = requests.get(url, headers = headers)
+    print "--- done"
+    text = r.content.strip()
+    if text.startswith("<tt"):
+        print "--- converting subtitles"
+        subt = ttml2srt(text, filename)
+        print "--- done: ", subt
+    else:
+        print "--- subtitle in correct format, saving"
+        tmp_dir = xbmc.translatePath("special://temp")
+        subs = os.path.join(tmp_dir, 'serialepenet')
+        if os.path.isdir(subs) is False:
+            os.makedirs(subs)
+        tmp_file = subs + os.sep + filename
+        print tmp_file
+        f = open(tmp_file, 'w')
+        f.write(text)
+        f.close()
+        subt = tmp_file
+
+    return subt
